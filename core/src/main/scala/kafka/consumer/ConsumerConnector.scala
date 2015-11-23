@@ -24,6 +24,10 @@ import kafka.serializer._
 /**
  *  Main interface for consumer
  */
+/**
+  * Scala的trait相当于java的interface，但是包含了更多的特性
+  * 此处为trait ConsumerConnector的基础
+  */
 trait ConsumerConnector {
   
   /**

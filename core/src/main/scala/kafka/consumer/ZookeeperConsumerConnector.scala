@@ -83,7 +83,7 @@ private[kafka] object ZookeeperConsumerConnector {
 private[kafka] class ZookeeperConsumerConnector(val config: ConsumerConfig,
                                                 val enableFetcher: Boolean) // for testing only
         extends ConsumerConnector with Logging with KafkaMetricsGroup {
-
+  /** 类初始化开始 **/
   private val isShuttingDown = new AtomicBoolean(false)
   private val rebalanceLock = new Object
   private var fetcher: Option[ConsumerFetcherManager] = None
@@ -139,7 +139,7 @@ private[kafka] class ZookeeperConsumerConnector(val config: ConsumerConfig,
 
   KafkaMetricsReporter.startReporters(config.props)
   AppInfo.registerInfo()
-
+  /** 类初始化结束 **/
   def this(config: ConsumerConfig) = this(config, true)
 
   def createMessageStreams(topicCountMap: Map[String,Int]): Map[String, List[KafkaStream[Array[Byte],Array[Byte]]]] =
@@ -160,12 +160,12 @@ private[kafka] class ZookeeperConsumerConnector(val config: ConsumerConfig,
     val wildcardStreamsHandler = new WildcardStreamsHandler[K,V](topicFilter, numStreams, keyDecoder, valueDecoder)
     wildcardStreamsHandler.streams
   }
-
+// 如果准许使用Fetcher的话，我们创建ConsumerFetcherManager来进行消息的fetch
   private def createFetcher() {
     if (enableFetcher)
       fetcher = Some(new ConsumerFetcherManager(consumerIdString, config, zkClient))
   }
-
+// 创建一个ZkClient，让自己连接到ZK上
   private def connectZk() {
     info("Connecting to zookeeper instance at " + config.zkConnect)
     zkClient = new ZkClient(config.zkConnect, config.zkSessionTimeoutMs, config.zkConnectionTimeoutMs, ZKStringSerializer)
@@ -214,7 +214,7 @@ private[kafka] class ZookeeperConsumerConnector(val config: ConsumerConfig,
       }
     }
   }
-
+// 消费函数
   def consume[K, V](topicCountMap: scala.collection.Map[String,Int], keyDecoder: Decoder[K], valueDecoder: Decoder[V])
       : Map[String,List[KafkaStream[K,V]]] = {
     debug("entering consume ")

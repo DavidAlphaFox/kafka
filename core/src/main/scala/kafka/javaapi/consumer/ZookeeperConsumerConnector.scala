@@ -59,6 +59,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
 */
 
+/**
+ * Kafka的客户端的zookeeper版本，实际上是封装kafka.consumer.ZookeeperConsumerConnector
+ * 主要是为了兼容Java
+*/
 private[kafka] class ZookeeperConsumerConnector(val config: ConsumerConfig,
                                                 val enableFetcher: Boolean) // for testing only
     extends ConsumerConnector {
@@ -84,6 +88,7 @@ private[kafka] class ZookeeperConsumerConnector(val config: ConsumerConfig,
     }
     val scalaReturn = underlying.consume(scalaTopicCountMap, keyDecoder, valueDecoder)
     val ret = new java.util.HashMap[String,java.util.List[KafkaStream[K,V]]]
+   //<- 操作符号代表generator
     for ((topic, streams) <- scalaReturn) {
       var javaStreamList = new java.util.ArrayList[KafkaStream[K,V]]
       for (stream <- streams)

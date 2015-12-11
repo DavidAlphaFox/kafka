@@ -59,6 +59,7 @@ trait Scheduler {
  * @param threadNamePrefix The name to use for scheduler threads. This prefix will have a number appended to it.
  * @param daemon If true the scheduler threads will be "daemon" threads and will not block jvm shutdown.
  */
+// 后台线程
 @threadsafe
 class KafkaScheduler(val threads: Int, 
                      val threadNamePrefix: String = "kafka-scheduler-", 

@@ -52,6 +52,7 @@ class KafkaApis(val requestChannel: RequestChannel,
   /**
    * Top-level method that handles all requests and multiplexes to the right api
    */
+  // API层真正在处理这些请求
   def handle(request: RequestChannel.Request) {
     try{
       trace("Handling request: " + request.requestObj + " from client: " + request.remoteAddress)

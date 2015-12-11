@@ -60,9 +60,11 @@ class SocketServer(val brokerId: Int,
   /**
    * Start the socket server
    */
+  // 启动Socket服务
   def startup() {
     val quotas = new ConnectionQuotas(maxConnectionsPerIp, maxConnectionsPerIpOverrides)
     for(i <- 0 until numProcessorThreads) {
+      // 创建处理线程
       processors(i) = new Processor(i, 
                                     time, 
                                     maxRequestSize, 
@@ -72,6 +74,7 @@ class SocketServer(val brokerId: Int,
                                     requestChannel,
                                     quotas,
                                     connectionsMaxIdleMs)
+      // 创建新的线程去处理Socket的读写
       Utils.newThread("kafka-network-thread-%d-%d".format(port, i), processors(i), false).start()
     }
 
@@ -80,9 +83,12 @@ class SocketServer(val brokerId: Int,
     })
 
     // register the processor threads for notification of responses
+    // 每次有新的Response，我们会唤醒相对应的processor
+    // 使用分区策略减少不必要的唤醒
     requestChannel.addResponseListener((id:Int) => processors(id).wakeup())
    
     // start accepting connections
+    // 创建Acceptor线程，用来接入连接
     this.acceptor = new Acceptor(host, port, processors, sendBufferSize, recvBufferSize, quotas)
     Utils.newThread("kafka-socket-acceptor", acceptor, false).start()
     acceptor.awaitStartup
@@ -373,7 +379,8 @@ private[kafka] class Processor(val id: Int,
     lruConnections.remove(key)
     super.close(key)
   }
-
+  // 每次在进入读取前
+  // 先进行发送检查
   private def processNewResponses() {
     var curr = requestChannel.receiveResponse(id)
     while(curr != null) {
@@ -433,11 +440,14 @@ private[kafka] class Processor(val id: Int,
   /*
    * Process reads from ready sockets
    */
+  //进行数据读取
   def read(key: SelectionKey) {
     lruConnections.put(key, currentTimeNanos)
     val socketChannel = channelFor(key)
     var receive = key.attachment.asInstanceOf[Receive]
+    // 新的请求
     if(key.attachment == null) {
+      // 创建一个BoundedByteBufferReceive然后和Channel绑定
       receive = new BoundedByteBufferReceive(maxRequestSize)
       key.attach(receive)
     }

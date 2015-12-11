@@ -68,9 +68,11 @@ class KafkaServer(val config: KafkaConfig, time: Time = SystemTime) extends Logg
    * Start up API for bringing up a single instance of the Kafka server.
    * Instantiates the LogManager, the SocketServer and the request handlers - KafkaRequestHandlers
    */
+  // 启动Kafka的实例
   def startup() {
     try {
       info("starting")
+      // 将Broker设置为newState状态
       brokerState.newState(Starting)
       isShuttingDown = new AtomicBoolean(false)
       shutdownLatch = new CountDownLatch(1)
@@ -84,7 +86,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = SystemTime) extends Logg
       /* start log manager */
       logManager = createLogManager(zkClient, brokerState)
       logManager.startup()
-
+      // 创建Socket服务
       socketServer = new SocketServer(config.brokerId,
                                       config.hostName,
                                       config.port,
@@ -97,10 +99,11 @@ class KafkaServer(val config: KafkaConfig, time: Time = SystemTime) extends Logg
                                       config.connectionsMaxIdleMs,
                                       config.maxConnectionsPerIpOverrides)
       socketServer.startup()
-
+      // 复制管理器
       replicaManager = new ReplicaManager(config, time, zkClient, kafkaScheduler, logManager, isShuttingDown)
 
       /* start offset manager */
+      // 创建Offset管理器
       offsetManager = createOffsetManager()
 
       kafkaController = new KafkaController(config, zkClient, brokerState)
@@ -135,7 +138,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = SystemTime) extends Logg
         throw e
     }
   }
-
+  // 初始化Zookeeper的Client
   private def initZk(): ZkClient = {
     info("Connecting to zookeeper on " + config.zkConnect)
 
@@ -305,7 +308,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = SystemTime) extends Logg
   def awaitShutdown(): Unit = shutdownLatch.await()
 
   def getLogManager(): LogManager = logManager
-  
+  // 创建日志服
   private def createLogManager(zkClient: ZkClient, brokerState: BrokerState): LogManager = {
     val defaultLogConfig = LogConfig(segmentSize = config.logSegmentBytes,
                                      segmentMs = config.logRollTimeMillis,

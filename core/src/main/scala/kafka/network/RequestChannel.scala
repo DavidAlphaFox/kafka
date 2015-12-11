@@ -28,7 +28,7 @@ import kafka.message.ByteBufferMessageSet
 import java.net._
 import org.apache.log4j.Logger
 
-
+// 请求队列
 object RequestChannel extends Logging {
   val AllDone = new Request(1, 2, getShutdownReceive(), 0)
 
@@ -109,6 +109,7 @@ object RequestChannel extends Logging {
 
 class RequestChannel(val numProcessors: Int, val queueSize: Int) extends KafkaMetricsGroup {
   private var responseListeners: List[(Int) => Unit] = Nil
+  // 使用一个Request队列，多个Response队列
   private val requestQueue = new ArrayBlockingQueue[RequestChannel.Request](queueSize)
   private val responseQueues = new Array[BlockingQueue[RequestChannel.Response]](numProcessors)
   for(i <- 0 until numProcessors)
@@ -133,7 +134,7 @@ class RequestChannel(val numProcessors: Int, val queueSize: Int) extends KafkaMe
       Map("processor" -> i.toString)
     )
   }
-
+  // 将请求放到队列上
   /** Send a request to be handled, potentially blocking until there is room in the queue for the request */
   def sendRequest(request: RequestChannel.Request) {
     requestQueue.put(request)

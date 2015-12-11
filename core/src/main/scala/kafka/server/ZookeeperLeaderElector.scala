@@ -45,6 +45,7 @@ class ZookeeperLeaderElector(controllerContext: ControllerContext,
 
   def startup {
     inLock(controllerContext.controllerLock) {
+      // 注册选主监听
       controllerContext.zkClient.subscribeDataChanges(electionPath, leaderChangeListener)
       elect
     }
@@ -56,7 +57,7 @@ class ZookeeperLeaderElector(controllerContext: ControllerContext,
        case None => -1
     }
   }
-    
+  // 进行选主
   def elect: Boolean = {
     val timestamp = SystemTime.milliseconds.toString
     val electString = Json.encode(Map("version" -> 1, "brokerid" -> brokerId, "timestamp" -> timestamp))

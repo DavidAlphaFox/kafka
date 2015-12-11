@@ -645,8 +645,10 @@ class KafkaController(val config : KafkaConfig, zkClient: ZkClient, val brokerSt
   def startup() = {
     inLock(controllerContext.controllerLock) {
       info("Controller starting up");
+      // 注册session超时
       registerSessionExpirationListener()
       isRunning = true
+      // 选举
       controllerElector.startup
       info("Controller startup complete")
     }

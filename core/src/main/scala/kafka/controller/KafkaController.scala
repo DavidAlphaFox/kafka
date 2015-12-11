@@ -158,6 +158,7 @@ class KafkaController(val config : KafkaConfig, zkClient: ZkClient, val brokerSt
   val controllerContext = new ControllerContext(zkClient, config.zkSessionTimeoutMs)
   val partitionStateMachine = new PartitionStateMachine(this)
   val replicaStateMachine = new ReplicaStateMachine(this)
+  // 创建Zookeeper的选主控制器
   private val controllerElector = new ZookeeperLeaderElector(controllerContext, ZkUtils.ControllerPath, onControllerFailover,
     onControllerResignation, config.brokerId)
   // have a separate scheduler for the controller to be able to start and stop independently of the

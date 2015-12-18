@@ -50,7 +50,7 @@ class ZookeeperLeaderElector(controllerContext: ControllerContext,
       elect
     }
   }
-
+  // 从Zookeeper上获得指定path下的数值
   private def getControllerID(): Int = {
     readDataMaybeNull(controllerContext.zkClient, electionPath)._1 match {
        case Some(controller) => KafkaController.parseControllerId(controller)
@@ -68,12 +68,14 @@ class ZookeeperLeaderElector(controllerContext: ControllerContext,
      * it's possible that the controller has already been elected when we get here. This check will prevent the following 
      * createEphemeralPath method from getting into an infinite loop if this broker is already the controller.
      */
+    // 曾经是leader，所以不用选主了
     if(leaderId != -1) {
        debug("Broker %d has been elected as leader, so stopping the election process.".format(leaderId))
        return amILeader
     }
 
     try {
+      // 尝试在Zookeeper上创建路径，并写入Broker的ID
       createEphemeralPathExpectConflictHandleZKBug(controllerContext.zkClient, electionPath, electString, brokerId,
         (controllerString : String, leaderId : Any) => KafkaController.parseControllerId(controllerString) == leaderId.asInstanceOf[Int],
         controllerContext.zkSessionTimeout)
@@ -117,6 +119,7 @@ class ZookeeperLeaderElector(controllerContext: ControllerContext,
      * Called when the leader information stored in zookeeper has changed. Record the new leader in memory
      * @throws Exception On any error.
      */
+    // 发生数据变化
     @throws(classOf[Exception])
     def handleDataChange(dataPath: String, data: Object) {
       inLock(controllerContext.controllerLock) {

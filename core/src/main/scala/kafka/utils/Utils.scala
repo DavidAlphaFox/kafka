@@ -529,6 +529,7 @@ object Utils extends Logging {
   /**
    * Execute the given function inside the lock
    */
+  // 本地锁
   def inLock[T](lock: Lock)(fun: => T): T = {
     lock.lock()
     try {

@@ -298,6 +298,7 @@ class KafkaController(val config : KafkaConfig, zkClient: ZkClient, val brokerSt
    * If it encounters any unexpected exception/error while becoming controller, it resigns as the current controller.
    * This ensures another controller election will be triggered and there will always be an actively serving controller
    */
+  // 当Broker成为主之后，将执行这个函数
   def onControllerFailover() {
     if(isRunning) {
       info("Broker %d starting become controller state transition".format(config.brokerId))
@@ -320,6 +321,7 @@ class KafkaController(val config : KafkaConfig, zkClient: ZkClient, val brokerSt
       maybeTriggerPartitionReassignment()
       maybeTriggerPreferredReplicaElection()
       /* send partition leadership info to all live brokers */
+      // 更新元信息
       sendUpdateMetadataRequest(controllerContext.liveOrShuttingDownBrokerIds.toSeq)
       if (config.autoLeaderRebalanceEnable) {
         info("starting the partition rebalance scheduler")

@@ -279,6 +279,7 @@ object ZkUtils extends Logging {
           // An ephemeral node may still exist even after its corresponding session has expired
           // due to a Zookeeper bug, in this case we need to retry writing until the previous node is deleted
           // and hence the write succeeds without ZkNodeExistsException
+          // 此处为Zookeeper的bug，大概意思是当一个节点离线,ephemeral类型的node还有可能存活一段时间
           ZkUtils.readDataMaybeNull(zkClient, path)._1 match {
             case Some(writtenData) => {
               if (checker(writtenData, expectedCallerData)) {

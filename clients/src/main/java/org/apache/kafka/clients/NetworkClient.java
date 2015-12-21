@@ -167,7 +167,8 @@ public class NetworkClient implements KafkaClient {
     @Override
     public List<ClientResponse> poll(List<ClientRequest> requests, long timeout, long now) {
         List<NetworkSend> sends = new ArrayList<NetworkSend>();
-
+        // 如果成功都成功
+        // 如果一个失败所有的都失败
         for (int i = 0; i < requests.size(); i++) {
             ClientRequest request = requests.get(i);
             int nodeId = request.request().destination();
@@ -184,6 +185,8 @@ public class NetworkClient implements KafkaClient {
         long waitForMetadataFetch = (this.metadataFetchInProgress ? Integer.MAX_VALUE : 0);
         // if there is no node available to connect, back off refreshing metadata
         long metadataTimeout = Math.max(Math.max(timeToNextMetadataUpdate, timeToNextReconnectAttempt), waitForMetadataFetch);
+        // 没有metadata fetch在进行
+        // 并且metadata 超时等于0
         if (!this.metadataFetchInProgress && metadataTimeout == 0)
             maybeUpdateMetadata(sends, now);
 
@@ -373,6 +376,7 @@ public class NetworkClient implements KafkaClient {
     /**
      * Add a metadata request to the list of sends if we can make one
      */
+    // 我们需要更新Metadata了
     private void maybeUpdateMetadata(List<NetworkSend> sends, long now) {
         // Beware that the behavior of this method and the computation of timeouts for poll() are
         // highly dependent on the behavior of leastLoadedNode.
@@ -410,6 +414,7 @@ public class NetworkClient implements KafkaClient {
     /**
      * Initiate a connection to the given node
      */
+    // 初始化连接
     private void initiateConnect(Node node, long now) {
         try {
             log.debug("Initiating connection to node {} at {}:{}.", node.id(), node.host(), node.port());

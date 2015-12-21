@@ -71,6 +71,8 @@ import org.slf4j.LoggerFactory;
  * 
  * This class is not thread safe!
  */
+// 对Java的Selector进行封装
+// 这样就能对自己封装的request进行select了
 public class Selector implements Selectable {
 
     private static final Logger log = LoggerFactory.getLogger(Selector.class);
@@ -89,6 +91,7 @@ public class Selector implements Selectable {
     /**
      * Create a new selector
      */
+
     public Selector(Metrics metrics, Time time , String metricGrpPrefix , Map<String, String> metricTags) {
         try {
             this.selector = java.nio.channels.Selector.open();

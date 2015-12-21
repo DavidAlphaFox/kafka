@@ -60,6 +60,7 @@ class KafkaApis(val requestChannel: RequestChannel,
         case RequestKeys.ProduceKey => handleProducerOrOffsetCommitRequest(request)
         case RequestKeys.FetchKey => handleFetchRequest(request)
         case RequestKeys.OffsetsKey => handleOffsetRequest(request)
+          //处理Metadata的请求
         case RequestKeys.MetadataKey => handleTopicMetadataRequest(request)
         case RequestKeys.LeaderAndIsrKey => handleLeaderAndIsrRequest(request)
         case RequestKeys.StopReplicaKey => handleStopReplicaRequest(request)
@@ -511,6 +512,7 @@ class KafkaApis(val requestChannel: RequestChannel,
                   Math.min(config.offsetsTopicReplicationFactor, aliveBrokers.length)
                 else
                   config.offsetsTopicReplicationFactor
+              // 创建新的Topic分区
               AdminUtils.createTopic(zkClient, topic, config.offsetsTopicPartitions,
                                      offsetsTopicReplicationFactor,
                                      offsetManager.offsetsTopicConfig)
@@ -540,6 +542,7 @@ class KafkaApis(val requestChannel: RequestChannel,
    */
   def handleTopicMetadataRequest(request: RequestChannel.Request) {
     val metadataRequest = request.requestObj.asInstanceOf[TopicMetadataRequest]
+    // 获取当前Topic的元数据
     val topicMetadata = getTopicMetadata(metadataRequest.topics.toSet)
     val brokers = metadataCache.getAliveBrokers
     trace("Sending topic metadata %s and brokers %s for correlation id %d to client %s".format(topicMetadata.mkString(","), brokers.mkString(","), metadataRequest.correlationId, metadataRequest.clientId))

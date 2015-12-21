@@ -136,6 +136,7 @@ public final class Cluster {
      * @param topic The topic name
      * @return A list of partitions
      */
+    // 获取特定Topic的分区
     public List<PartitionInfo> partitionsForTopic(String topic) {
         return this.partitionsByTopic.get(topic);
     }

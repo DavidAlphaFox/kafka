@@ -66,7 +66,7 @@ class KafkaRequestHandler(id: Int,
 
   def shutdown(): Unit = requestChannel.sendRequest(RequestChannel.AllDone)
 }
-
+// 处理Socket请求
 class KafkaRequestHandlerPool(val brokerId: Int,
                               val requestChannel: RequestChannel,
                               val apis: KafkaApis,

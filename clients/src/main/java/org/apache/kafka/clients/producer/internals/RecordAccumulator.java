@@ -136,10 +136,12 @@ public final class RecordAccumulator {
      * @param compression The compression codec for the record
      * @param callback The user-supplied callback to execute when the request is complete
      */
+    // 将相应的记录发送到kafka队列上
     public RecordAppendResult append(TopicPartition tp, byte[] key, byte[] value, CompressionType compression, Callback callback) throws InterruptedException {
         if (closed)
             throw new IllegalStateException("Cannot send after the producer is closed.");
         // check if we have an in-progress batch
+        // 得到相应分区的队列
         Deque<RecordBatch> dq = dequeFor(tp);
         synchronized (dq) {
             RecordBatch last = dq.peekLast();

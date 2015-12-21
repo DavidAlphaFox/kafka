@@ -15,6 +15,7 @@ package org.apache.kafka.common;
 /**
  * Information about a Kafka node
  */
+// 定义Kafka的节点信息
 public class Node {
 
     private final int id;

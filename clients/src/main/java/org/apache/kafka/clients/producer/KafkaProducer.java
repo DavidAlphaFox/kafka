@@ -308,6 +308,7 @@ public class KafkaProducer<K,V> implements Producer<K,V> {
      * @param callback A user-supplied callback to execute when the record has been acknowledged by the server (null
      *        indicates no callback)
      */
+    // 向Broker Publish消息
     @Override
     public Future<RecordMetadata> send(ProducerRecord<K,V> record, Callback callback) {
         try {
@@ -330,9 +331,12 @@ public class KafkaProducer<K,V> implements Producer<K,V> {
                         " specified in value.serializer");
             }
             ProducerRecord<byte[], byte[]> serializedRecord = new ProducerRecord<byte[], byte[]>(record.topic(), record.partition(), serializedKey, serializedValue);
+            // 获得相应的分区ID
             int partition = partitioner.partition(serializedRecord, metadata.fetch());
+            // 得到需要序列化的大小
             int serializedSize = Records.LOG_OVERHEAD + Record.recordSize(serializedKey, serializedValue);
             ensureValidRecordSize(serializedSize);
+            // 创建新的分区记录
             TopicPartition tp = new TopicPartition(record.topic(), partition);
             log.trace("Sending record {} with callback {} to topic {} partition {}", record, callback, record.topic(), partition);
             RecordAccumulator.RecordAppendResult result = accumulator.append(tp, serializedKey, serializedValue, compressionType, callback);
@@ -364,6 +368,7 @@ public class KafkaProducer<K,V> implements Producer<K,V> {
      * @param topic The topic we want metadata for
      * @param maxWaitMs The maximum time in ms for waiting on the metadata
      */
+    // 先要获取Topic的元信息
     private void waitOnMetadata(String topic, long maxWaitMs) {
         if (metadata.fetch().partitionsForTopic(topic) != null) {
             return;
@@ -377,6 +382,7 @@ public class KafkaProducer<K,V> implements Producer<K,V> {
                 sender.wakeup();
                 metadata.awaitUpdate(version, remainingWaitMs);
                 long elapsed = time.milliseconds() - begin;
+                // 如果超时，直接甩出异常
                 if (elapsed >= maxWaitMs)
                     throw new TimeoutException("Failed to update metadata after " + maxWaitMs + " ms.");
                 remainingWaitMs = maxWaitMs - elapsed;

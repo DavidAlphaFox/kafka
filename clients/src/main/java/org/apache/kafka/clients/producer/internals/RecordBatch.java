@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
  * 
  * This class is not thread safe and external synchronization must be used when modifying it
  */
+// 一堆需要发送的记录
 public final class RecordBatch {
 
     private static final Logger log = LoggerFactory.getLogger(RecordBatch.class);
@@ -58,9 +59,13 @@ public final class RecordBatch {
      */
     public FutureRecordMetadata tryAppend(byte[] key, byte[] value, Callback callback) {
         if (!this.records.hasRoomFor(key, value)) {
+            // 如果没有足够的空间去发送
+            // 直接给调用者返回null，让调用者去进行处理
             return null;
         } else {
+            // 增加记录
             this.records.append(0L, key, value);
+            // 获得最大的记录大小
             this.maxRecordSize = Math.max(this.maxRecordSize, Record.recordSize(key, value));
             FutureRecordMetadata future = new FutureRecordMetadata(this.produceFuture, this.recordCount);
             if (callback != null)

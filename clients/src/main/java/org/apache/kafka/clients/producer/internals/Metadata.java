@@ -66,6 +66,7 @@ public final class Metadata {
     /**
      * Get the current cluster info without blocking
      */
+    // 获取Cluster信息
     public synchronized Cluster fetch() {
         return this.cluster;
     }

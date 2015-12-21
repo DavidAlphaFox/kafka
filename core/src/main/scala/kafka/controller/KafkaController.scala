@@ -322,6 +322,7 @@ class KafkaController(val config : KafkaConfig, zkClient: ZkClient, val brokerSt
       maybeTriggerPreferredReplicaElection()
       /* send partition leadership info to all live brokers */
       // 更新元信息
+      // 当称为Leader后，会要求所有的Broker更新元数据
       sendUpdateMetadataRequest(controllerContext.liveOrShuttingDownBrokerIds.toSeq)
       if (config.autoLeaderRebalanceEnable) {
         info("starting the partition rebalance scheduler")

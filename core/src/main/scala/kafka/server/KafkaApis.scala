@@ -60,10 +60,11 @@ class KafkaApis(val requestChannel: RequestChannel,
         case RequestKeys.ProduceKey => handleProducerOrOffsetCommitRequest(request)
         case RequestKeys.FetchKey => handleFetchRequest(request)
         case RequestKeys.OffsetsKey => handleOffsetRequest(request)
-          //处理Metadata的请求
+          // 处理MetaData的请求
         case RequestKeys.MetadataKey => handleTopicMetadataRequest(request)
         case RequestKeys.LeaderAndIsrKey => handleLeaderAndIsrRequest(request)
         case RequestKeys.StopReplicaKey => handleStopReplicaRequest(request)
+          // 请求更新MetaData
         case RequestKeys.UpdateMetadataKey => handleUpdateMetadataRequest(request)
         case RequestKeys.ControlledShutdownKey => handleControlledShutdownRequest(request)
         case RequestKeys.OffsetCommitKey => handleOffsetCommitRequest(request)

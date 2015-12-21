@@ -132,7 +132,7 @@ class ReplicaManager(val config: KafkaConfig,
     // send any newly unblocked responses
     satisfied.foreach(fetchRequestPurgatory.respond(_))
   }
-
+  // 启动Kafka的复制管理器
   def startup() {
     // start ISR expiration thread
     scheduler.schedule("isr-expiration", maybeShrinkIsr, period = config.replicaLagTimeMaxMs, unit = TimeUnit.MILLISECONDS)

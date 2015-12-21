@@ -301,7 +301,9 @@ class Partition(val topic: String,
    * @param leaderReplica
    */
   private def maybeIncrementLeaderHW(leaderReplica: Replica) {
+    // 得到所有的logEndOffsets
     val allLogEndOffsets = inSyncReplicas.map(_.logEndOffset)
+    // 找到新的Offset和老的Leader Offset
     val newHighWatermark = allLogEndOffsets.min(new LogOffsetMetadata.OffsetOrdering)
     val oldHighWatermark = leaderReplica.highWatermark
     if(oldHighWatermark.precedes(newHighWatermark)) {
@@ -316,18 +318,20 @@ class Partition(val topic: String,
         .format(oldHighWatermark, newHighWatermark, topic, partitionId, allLogEndOffsets.mkString(",")))
     }
   }
-
+  // 定时执行ISR调整函数
   def maybeShrinkIsr(replicaMaxLagTimeMs: Long,  replicaMaxLagMessages: Long) {
     inWriteLock(leaderIsrUpdateLock) {
       leaderReplicaIfLocal() match {
         case Some(leaderReplica) =>
           val outOfSyncReplicas = getOutOfSyncReplicas(leaderReplica, replicaMaxLagTimeMs, replicaMaxLagMessages)
           if(outOfSyncReplicas.size > 0) {
+            // 去掉那些我们不需要的节点
             val newInSyncReplicas = inSyncReplicas -- outOfSyncReplicas
             assert(newInSyncReplicas.size > 0)
             info("Shrinking ISR for partition [%s,%d] from %s to %s".format(topic, partitionId,
               inSyncReplicas.map(_.brokerId).mkString(","), newInSyncReplicas.map(_.brokerId).mkString(",")))
             // update ISR in zk and in cache
+            // 在zookeeper上和cache中更新这些节点信息
             updateIsr(newInSyncReplicas)
             // we may need to increment high watermark since ISR could be down to 1
             maybeIncrementLeaderHW(leaderReplica)
@@ -337,7 +341,7 @@ class Partition(val topic: String,
       }
     }
   }
-
+  // 获取需要除去的节点
   def getOutOfSyncReplicas(leaderReplica: Replica, keepInSyncTimeMs: Long, keepInSyncMessages: Long): Set[Replica] = {
     /**
      * there are two cases that need to be handled here -
@@ -346,6 +350,8 @@ class Partition(val topic: String,
      * 2. Slow followers: If the leo of the slowest follower is behind the leo of the leader by keepInSyncMessages, the
      *                     follower is not catching up and should be removed from the ISR
      **/
+    // 从注释上来看，需要将卡住的节点和非常缓慢同步的节点去掉
+    // 此处就是寻找这两个类型的节点
     val leaderLogEndOffset = leaderReplica.logEndOffset
     val candidateReplicas = inSyncReplicas - leaderReplica
     // Case 1 above

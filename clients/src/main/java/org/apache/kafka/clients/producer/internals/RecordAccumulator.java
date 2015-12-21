@@ -144,6 +144,8 @@ public final class RecordAccumulator {
         // 得到相应分区的队列
         Deque<RecordBatch> dq = dequeFor(tp);
         synchronized (dq) {
+            // 从队列上拿到最后一个
+            // 如果有的情况下，我们将请求的放到队列的最后一个操作上
             RecordBatch last = dq.peekLast();
             if (last != null) {
                 FutureRecordMetadata future = last.tryAppend(key, value, callback);
@@ -154,11 +156,14 @@ public final class RecordAccumulator {
         }
 
         // we don't have an in-progress record batch try to allocate a new batch
+        // 如果没有在进行操作的队列，那么我们就创建一个新的放入其中
         int size = Math.max(this.batchSize, Records.LOG_OVERHEAD + Record.recordSize(key, value));
         log.trace("Allocating a new {} byte message buffer for topic {} partition {}", size, tp.topic(), tp.partition());
         ByteBuffer buffer = free.allocate(size);
         synchronized (dq) {
             RecordBatch last = dq.peekLast();
+            // 安全起见，再次尝试获取最后
+            // 更细的锁粒度，可以提高并发能力
             if (last != null) {
                 FutureRecordMetadata future = last.tryAppend(key, value, callback);
                 if (future != null) {
@@ -168,6 +173,9 @@ public final class RecordAccumulator {
                     return new RecordAppendResult(future, dq.size() > 1 || last.records.isFull(), false);
                 }
             }
+            // 在队列上依然无法获取最后一个操作
+            // 可能操作受限，或者该操作已经被完成了
+            // 我们直接创建一个新的操作，放入队列
             MemoryRecords records = MemoryRecords.emptyRecords(buffer, compression, this.batchSize);
             RecordBatch batch = new RecordBatch(tp, records, time.milliseconds());
             FutureRecordMetadata future = Utils.notNull(batch.tryAppend(key, value, callback));
@@ -204,6 +212,7 @@ public final class RecordAccumulator {
      * <li>The accumulator has been closed
      * </ol>
      */
+    // 获取要发送的节点列表
     public ReadyCheckResult ready(Cluster cluster, long nowMs) {
         Set<Node> readyNodes = new HashSet<Node>();
         long nextReadyCheckDelayMs = Long.MAX_VALUE;
@@ -213,7 +222,7 @@ public final class RecordAccumulator {
         for (Map.Entry<TopicPartition, Deque<RecordBatch>> entry : this.batches.entrySet()) {
             TopicPartition part = entry.getKey();
             Deque<RecordBatch> deque = entry.getValue();
-
+            // 获取分区的Leader节点，注意ISR的存在
             Node leader = cluster.leaderFor(part);
             if (leader == null) {
                 unknownLeadersExist = true;
@@ -221,6 +230,7 @@ public final class RecordAccumulator {
                 synchronized (deque) {
                     RecordBatch batch = deque.peekFirst();
                     if (batch != null) {
+                        // 说明队列中有操作
                         boolean backingOff = batch.attempts > 0 && batch.lastAttemptMs + retryBackoffMs > nowMs;
                         long waitedTimeMs = nowMs - batch.lastAttemptMs;
                         long timeToWaitMs = backingOff ? retryBackoffMs : lingerMs;
@@ -295,6 +305,8 @@ public final class RecordAccumulator {
                                 break;
                             } else {
                                 RecordBatch batch = deque.pollFirst();
+                                // 此时已经关闭了
+                                // 所以要在tryAppend的时候进行两步检测
                                 batch.records.close();
                                 size += batch.records.sizeInBytes();
                                 ready.add(batch);
@@ -314,6 +326,9 @@ public final class RecordAccumulator {
      * Get the deque for the given topic-partition, creating it if necessary. Since new topics will only be added rarely
      * we copy-on-write the hashmap
      */
+    // 当我想要一个分区出队列的时候
+    // 先尝试我们是否有等待操作的队列，如果没有则创建一个新的队列放到Map中
+    // 并且返回给调用者
     private Deque<RecordBatch> dequeFor(TopicPartition tp) {
         Deque<RecordBatch> d = this.batches.get(tp);
         if (d != null)

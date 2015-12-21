@@ -28,8 +28,10 @@ import org.apache.kafka.common.TopicPartition;
  * partition in a produce request and it is shared by all the {@link RecordMetadata} instances that are batched together
  * for the same partition in the request.
  */
-public final class ProduceRequestResult {
+// 代表在一个partition上进行操作的未来对象
+// 使用CountDownLatch进行同步
 
+public final class ProduceRequestResult {
     private final CountDownLatch latch = new CountDownLatch(1);
     private volatile TopicPartition topicPartition;
     private volatile long baseOffset = -1L;
@@ -44,6 +46,9 @@ public final class ProduceRequestResult {
      * @param baseOffset The base offset assigned to the record
      * @param error The error that occurred if there was one, or null.
      */
+    // 当结果被设置的时候
+    // 会更新的offset和error等
+    // 然后触发CountDownLatch，这样await地方就得到了通知
     public void done(TopicPartition topicPartition, long baseOffset, RuntimeException error) {
         this.topicPartition = topicPartition;
         this.baseOffset = baseOffset;

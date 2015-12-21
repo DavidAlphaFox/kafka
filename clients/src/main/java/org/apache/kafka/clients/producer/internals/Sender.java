@@ -169,7 +169,9 @@ public class Sender implements Runnable {
         }
 
         // create produce requests
+        // 拿到所有的记录
         Map<Integer, List<RecordBatch>> batches = this.accumulator.drain(cluster, result.readyNodes, this.maxRequestSize, now);
+        // 创建请求
         List<ClientRequest> requests = createProduceRequests(batches, now);
         sensors.updateProduceRequestMetrics(requests);
 
@@ -188,7 +190,11 @@ public class Sender implements Runnable {
         // otherwise if some partition already has some data accumulated but not ready yet,
         // the select time will be the time difference between now and its linger expiry time;
         // otherwise the select time will be the time difference between now and the metadata expiry time;
+        // 等待请求结果
         List<ClientResponse> responses = this.client.poll(requests, pollTimeout, now);
+        // 循环处理请求
+        // 从此处来看，Kafka选择一次性发出多个操作（所谓的batch），来提高整个吞吐量
+        // 而非一次一个的发送，然后等待ACK返回
         for (ClientResponse response : responses) {
             if (response.wasDisconnected())
                 handleDisconnect(response, now);
@@ -282,6 +288,7 @@ public class Sender implements Runnable {
     /**
      * Transfer the record batches into a list of produce requests on a per-node basis
      */
+    // 将记录转化成操作请求
     private List<ClientRequest> createProduceRequests(Map<Integer, List<RecordBatch>> collated, long now) {
         List<ClientRequest> requests = new ArrayList<ClientRequest>(collated.size());
         for (Map.Entry<Integer, List<RecordBatch>> entry : collated.entrySet())

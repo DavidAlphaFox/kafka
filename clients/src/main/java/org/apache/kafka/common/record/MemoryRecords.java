@@ -25,6 +25,10 @@ import org.apache.kafka.common.utils.AbstractIterator;
 /**
  * A {@link Records} implementation backed by a ByteBuffer.
  */
+// 这个类没有任何线程安全机制
+// 完全需要依赖外部的synchronized来进行同步
+// 此处利用了Java关键字synchronized同一个对象，相当于共用一个锁
+// 可以参考JVM中，对对象进行synchronized的机制
 public class MemoryRecords implements Records {
 
     private final Compressor compressor;
@@ -115,6 +119,9 @@ public class MemoryRecords implements Records {
     /**
      * Close this batch for no more appends
      */
+    // 当RecordAccumulator在Drain的时候
+    // 会关闭到掉当前的写
+    // 这样就不会在将新的操作加入其中
     public void close() {
         if (writable) {
             compressor.close();

@@ -95,6 +95,7 @@ abstract class AbstractFetcherThread(name: String, clientId: String, sourceBroke
     var response: FetchResponse = null
     try {
       trace("Issuing to broker %d of fetch request %s".format(sourceBroker.id, fetchRequest))
+      // 使用简单的Consumer来获取数据
       response = simpleConsumer.fetch(fetchRequest)
     } catch {
       case t: Throwable =>

@@ -61,7 +61,8 @@ class SimpleConsumer(val host: String,
       isClosed = true
     }
   }
-  
+  // 使用一条阻塞通道
+  // 这样大大的降低编程的复杂度
   private def sendRequest(request: RequestOrResponse): Receive = {
     lock synchronized {
       var response: Receive = null
@@ -109,6 +110,8 @@ class SimpleConsumer(val host: String,
     val aggregateTimer = fetchRequestAndResponseStats.getFetchRequestAndResponseAllBrokersStats.requestTimer
     aggregateTimer.time {
       specificTimer.time {
+        // 发送Request
+        // 外面包装一个Timer统计
         response = sendRequest(request)
       }
     }

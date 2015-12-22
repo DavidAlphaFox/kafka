@@ -45,6 +45,7 @@ abstract class AbstractFetcherThread(name: String, clientId: String, sourceBroke
   private val partitionMap = new mutable.HashMap[TopicAndPartition, Long] // a (topic, partition) -> offset map
   private val partitionMapLock = new ReentrantLock
   private val partitionMapCond = partitionMapLock.newCondition()
+  // 简单的消费者
   val simpleConsumer = new SimpleConsumer(sourceBroker.host, sourceBroker.port, socketTimeout, socketBufferSize, clientId)
   private val metricId = new ClientIdAndBroker(clientId, sourceBroker.host, sourceBroker.port)
   val fetcherStats = new FetcherStats(metricId)
@@ -82,9 +83,10 @@ abstract class AbstractFetcherThread(name: String, clientId: String, sourceBroke
                            offset, fetchSize)
       }
     }
-
+    // 创建拉取请求
     val fetchRequest = fetchRequestBuilder.build()
     if (!fetchRequest.requestInfo.isEmpty)
+      // 处理这些拉取请求
       processFetchRequest(fetchRequest)
   }
 

@@ -306,12 +306,17 @@ class Partition(val topic: String,
     // 找到新的Offset和老的Leader Offset
     val newHighWatermark = allLogEndOffsets.min(new LogOffsetMetadata.OffsetOrdering)
     val oldHighWatermark = leaderReplica.highWatermark
+    // 比较水位线，如果过去的水位线比新的水位线要小
     if(oldHighWatermark.precedes(newHighWatermark)) {
+      // 更新Leader的水位线
       leaderReplica.highWatermark = newHighWatermark
       debug("High watermark for partition [%s,%d] updated to %s".format(topic, partitionId, newHighWatermark))
       // some delayed requests may be unblocked after HW changed
+      // 创建新的RequestKey
       val requestKey = new TopicAndPartition(this.topic, this.partitionId)
+      // 立刻响应那些延迟的拉取请求
       replicaManager.unblockDelayedFetchRequests(requestKey)
+      // 立刻响应那些延迟的推送请求
       replicaManager.unblockDelayedProduceRequests(requestKey)
     } else {
       debug("Skipping update high watermark since Old hw %s is larger than new hw %s for partition [%s,%d]. All leo's are %s"
@@ -335,6 +340,7 @@ class Partition(val topic: String,
             updateIsr(newInSyncReplicas)
             // we may need to increment high watermark since ISR could be down to 1
             maybeIncrementLeaderHW(leaderReplica)
+            // 更新性能指标
             replicaManager.isrShrinkRate.mark()
           }
         case None => // do nothing if no longer leader

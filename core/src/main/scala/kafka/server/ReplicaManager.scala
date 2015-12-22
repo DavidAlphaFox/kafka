@@ -45,7 +45,7 @@ object ReplicaManager {
 
 case class PartitionDataAndOffset(data: FetchResponsePartitionData, offset: LogOffsetMetadata)
 
-
+// 复制管理器
 class ReplicaManager(val config: KafkaConfig, 
                      time: Time,
                      val zkClient: ZkClient,
@@ -57,6 +57,7 @@ class ReplicaManager(val config: KafkaConfig,
   private val localBrokerId = config.brokerId
   private val allPartitions = new Pool[(String, Int), Partition]
   private val replicaStateChangeLock = new Object
+  // 复制拉取管理器
   val replicaFetcherManager = new ReplicaFetcherManager(config, this)
   private val highWatermarkCheckPointThreadStarted = new AtomicBoolean(false)
   val highWatermarkCheckpoints = config.logDirs.map(dir => (new File(dir).getAbsolutePath, new OffsetCheckpoint(new File(dir, ReplicaManager.HighWatermarkFilename)))).toMap
@@ -281,6 +282,7 @@ class ReplicaManager(val config: KafkaConfig,
   /**
    * Read from a single topic/partition at the given offset upto maxSize bytes
    */
+  // 从特定的offset开始读取特定topic一定量的数据
   private def readMessageSet(topic: String,
                              partition: Int,
                              offset: Long,

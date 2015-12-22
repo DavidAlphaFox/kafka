@@ -111,7 +111,7 @@ class OffsetManager(val config: OffsetManagerConfig,
       def value = offsetsCache.keys.map(_.group).toSet.size
     }
   )
-
+// Offset缓存压缩
   private def compact() {
     debug("Compacting offsets cache.")
     val startMs = SystemTime.milliseconds

@@ -24,9 +24,10 @@ import collection.JavaConversions
 import kafka.common.KafkaException
 import java.lang.Object
 
-
+// 池子集合
+// 就是对ConcurrentHashMap的封装
 class Pool[K,V](valueFactory: Option[(K) => V] = None) extends Iterable[(K, V)] {
-
+  // 内部使用ConcurrentHashMap做为存储
   private val pool = new ConcurrentHashMap[K, V]
   private val createLock = new Object
 

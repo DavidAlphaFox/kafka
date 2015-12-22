@@ -19,7 +19,9 @@ package kafka.utils
 
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.CountDownLatch
-
+// 抽象出一个可关闭的线程
+// 这个线程默认是非Daemon
+// 整个线程是可以退出的，子类只需要重写doWork即可
 abstract class ShutdownableThread(val name: String, val isInterruptible: Boolean = true)
         extends Thread(name) with Logging {
   this.setDaemon(false)

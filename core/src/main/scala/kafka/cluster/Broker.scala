@@ -28,7 +28,7 @@ import org.apache.kafka.common.utils.Utils._
  * A Kafka broker
  */
 object Broker {
-
+  // 尝试创建broker
   def createBroker(id: Int, brokerInfoString: String): Broker = {
     if(brokerInfoString == null)
       throw new BrokerNotAvailableException("Broker id %s does not exist".format(id))

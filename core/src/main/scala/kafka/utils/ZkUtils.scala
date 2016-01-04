@@ -157,7 +157,8 @@ object ZkUtils extends Logging {
       case None => Seq.empty[Int]
     }
   }
-
+// 在Zookeeper中注册一个broker
+// 其中内容包括JMX的端口号
   def registerBrokerInZk(zkClient: ZkClient, id: Int, host: String, port: Int, timeout: Int, jmxPort: Int) {
     val brokerIdPath = ZkUtils.BrokerIdsPath + "/" + id
     val timestamp = SystemTime.milliseconds.toString
@@ -165,6 +166,7 @@ object ZkUtils extends Logging {
     val expectedBroker = new Broker(id, host, port)
 
     try {
+      // 创建持久化的节点
       createEphemeralPathExpectConflictHandleZKBug(zkClient, brokerIdPath, brokerInfo, expectedBroker,
         (brokerString: String, broker: Any) => Broker.createBroker(broker.asInstanceOf[Broker].id, brokerString).equals(broker.asInstanceOf[Broker]),
         timeout)

@@ -39,7 +39,7 @@ class KafkaHealthcheck(private val brokerId: Int,
 
   val brokerIdPath = ZkUtils.BrokerIdsPath + "/" + brokerId
   val sessionExpireListener = new SessionExpireListener
-
+// 启动监听
   def startup() {
     zkClient.subscribeStateChanges(sessionExpireListener)
     register()
